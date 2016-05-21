@@ -1,0 +1,112 @@
+diff -rupd exiv2-0.25.orig/CMakeLists.txt exiv2-0.25/CMakeLists.txt
+--- exiv2-0.25.orig/CMakeLists.txt	2015-06-15 17:32:21.000000000 +0200
++++ exiv2-0.25/CMakeLists.txt	2016-05-20 23:20:30.044573700 +0200
+@@ -27,6 +27,13 @@ else()
+ endif()
+ SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+ 
++set(CONFIGURATION_NAME ${CMAKE_BUILD_TYPE})
++message(STATUS CMAKE_GENERATOR = ${CMAKE_GENERATOR})
++if(CMAKE_GENERATOR MATCHES "Visual Studio")
++  message(WARNING "CMAKE_GENERATOR does not match Visual Studio")
++  set(CONFIGURATION_NAME "$(ConfigurationName)")
++endif()
++message(STATUS CONFIGURATION_NAME=${CONFIGURATION_NAME})
+ 
+ SET( PACKAGE_COPYRIGHT      "Andreas Huggel" )
+ SET( PACKAGE_BUGREPORT      "ahuggel@gmx.net" )
+@@ -94,28 +101,28 @@ if( MSVC )
+     # link dependent libraries
+     FIND_PACKAGE(EXPAT QUIET)
+     if ( NOT EXPAT_LIBRARY  )
+-        set(EXPAT_LIBRARY      ${CMAKE_SOURCE_DIR}/../${E}/$(ConfigurationName)/expat)
++        set(EXPAT_LIBRARY      ${CMAKE_SOURCE_DIR}/../${E}/${CONFIGURATION_NAME}/expat)
+         set(EXPAT_INCLUDE_DIR  ${CMAKE_SOURCE_DIR}/../${E}/lib)
+         include_directories( ${EXPAT_INCLUDE_DIR} msvc64\\include src\\include)
+     endif()
+ 
+     FIND_PACKAGE(CURL)
+     if ( NOT CURL_FOUND )
+-        set(CURL_LIBRARY       ${CMAKE_SOURCE_DIR}/../${C}/$(ConfigurationName)/curl)
++        set(CURL_LIBRARY       ${CMAKE_SOURCE_DIR}/../${C}/${CONFIGURATION_NAME}/curl)
+         set(CURL_INCLUDE_DIR   ${CMAKE_SOURCE_DIR}/../${C})
+         include_directories( ${CURL_INCLUDE_DIR})
+     endif()
+ 
+     # FIND_PACKAGE(SSH)
+     if ( NOT SSH_FOUND )
+-        set(SSH_LIBRARY       ${CMAKE_SOURCE_DIR}/../${C}/$(ConfigurationName)/ssh)
++        set(SSH_LIBRARY       ${CMAKE_SOURCE_DIR}/../${C}/${CONFIGURATION_NAME}/ssh)
+         set(SSH_INCLUDE_DIR   ${CMAKE_SOURCE_DIR}/../${C})
+         include_directories( ${SSH_INCLUDE_DIR})
+     endif()
+ 
+     FIND_PACKAGE(ZLIB QUIET)
+     if ( NOT ZLIB_FOUND )
+-        set(ZLIB_LIBRARY       ${CMAKE_SOURCE_DIR}/../${Z}/$(ConfigurationName)/zlib)
++        set(ZLIB_LIBRARY       ${CMAKE_SOURCE_DIR}/../${Z}/${CONFIGURATION_NAME}/zlib)
+         set(ZLIB_INCLUDE_DIR   ${CMAKE_SOURCE_DIR}/../${Z})
+     endif()
+     include_directories(${ZLIB_INCLUDE_DIR})
+Only in exiv2-0.25/include/exiv2: exv_conf.h
+diff -rupd exiv2-0.25.orig/include/exiv2/exv_msvc.h exiv2-0.25/include/exiv2/exv_msvc.h
+--- exiv2-0.25.orig/include/exiv2/exv_msvc.h	2015-06-15 17:32:21.000000000 +0200
++++ exiv2-0.25/include/exiv2/exv_msvc.h	2016-05-20 23:07:17.106529900 +0200
+@@ -113,9 +113,6 @@ typedef int pid_t;
+ #define CURL_STATICLIB
+ #endif
+ 
+-#pragma comment(lib, "ws2_32.lib")
+-#pragma comment(lib, "wldap32.lib")
+-
+ /* File path separator */
+ #define EXV_SEPARATOR_STR "\\"
+ #define EXV_SEPARATOR_CHR '\\'
+diff -rupd exiv2-0.25.orig/src/CMakeLists.txt exiv2-0.25/src/CMakeLists.txt
+--- exiv2-0.25.orig/src/CMakeLists.txt	2015-06-14 11:12:19.000000000 +0200
++++ exiv2-0.25/src/CMakeLists.txt	2016-05-20 23:58:21.896489000 +0200
+@@ -257,10 +257,16 @@ else()
+     endif()
+ endif()
+ 
++if(WIN32)
++    TARGET_LINK_LIBRARIES( exiv2lib ws2_32 wldap32)
++endif()
++
+ if( EXIV2_ENABLE_LIBXMP )
+     ADD_DEPENDENCIES( exiv2lib xmp )
+-    if  ( MSVC )
++    if  ( CMAKE_GENERATOR MATCHES "Visual Studio" )
+         LINK_DIRECTORIES(${LIBRARY_OUTPUT_PATH}/$(ConfigurationName))
++	else()
++		LINK_DIRECTORIES(${LIBRARY_OUTPUT_PATH}/${CMAKE_BUILD_TYPE})
+     endif(MSVC)
+     TARGET_LINK_LIBRARIES( exiv2lib xmp )
+ ENDIF()
+@@ -269,7 +275,7 @@ IF( EXIV2_ENABLE_PNG )
+     IF( ZLIB_FOUND )
+         IF( MSVC )
+             if ( EXIV2_ENABLE_SHARED )
+-                TARGET_LINK_LIBRARIES( exiv2lib optimized ${ZLIB_LIBRARIES} debug ${ZLIB_LIBRARIES}d )
++                TARGET_LINK_LIBRARIES( exiv2lib optimized ${ZLIB_LIBRARIES} debug ${ZLIB_LIBRARIES} )
+             else()
+                 TARGET_LINK_LIBRARIES( exiv2lib optimized zlibstatic.lib debug zlibstaticd.lib )
+             endif()
+diff -rupd exiv2-0.25.orig/src/localtime.c exiv2-0.25/src/localtime.c
+--- exiv2-0.25.orig/src/localtime.c	2014-12-25 14:55:57.000000000 +0100
++++ exiv2-0.25/src/localtime.c	2016-05-20 23:07:17.186551000 +0200
+@@ -105,6 +105,13 @@ struct lsinfo {				/* leap second inform
+ #define MY_TZNAME_MAX	255
+ #endif /* !defined TZNAME_MAX */
+ 
++
++#if defined(_MSC_VER) && _MSC_VER >= 1900
++#ifndef tzname
++#define tzname _tzname
++#endif
++#endif
++
+ struct state {
+ 	int		leapcnt;
+ 	int		timecnt;
+Only in exiv2-0.25/src: svn_version.h
