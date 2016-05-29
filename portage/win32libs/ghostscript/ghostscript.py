@@ -18,7 +18,7 @@ class subinfo(info.infoclass):
 
     def setTargets( self ):
         for ver in ['9.18']:
-            self.targets[ ver ] = "http://downloads.ghostscript.com/public/ghostscript-%s.tar.gz" % ver
+            self.targets[ ver ] = "http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-%s.tar.gz" % ver
             self.targetInstSrc[ ver ] = "ghostscript-" + ver
         if compiler.isMinGW():
             self.patchToApply['9.18'] = [
