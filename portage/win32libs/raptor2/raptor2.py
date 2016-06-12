@@ -4,7 +4,7 @@ from Package.CMakePackageBase import *
 
 class subinfo(info.infoclass):
     def setTargets( self ):
-        for ver in ['2.0.4', '2.0.8']:
+        for ver in ['2.0.4', '2.0.8', '2.0.15']:
             self.targets[ ver ] = 'http://download.librdf.org/source/raptor2-' + ver + '.tar.gz'
             self.targetInstSrc[ ver ] = 'raptor2-' + ver
         self.patchToApply[ '2.0.4' ] = [( 'raptor2-2.0.4-20110811.diff', 1 ),
@@ -14,9 +14,10 @@ class subinfo(info.infoclass):
                                        ]
         self.targetDigests['2.0.4'] = '79e1289f480cb0fe75f49ec29d9f49189a8a58c2'
         self.targetDigests['2.0.8'] = '6caec62d28dbf5bc26e8de5a46101b52aabf94fd'
+        self.targetDigests['2.0.15'] = '504231f87024df9aceb90eb957196b557b4b8e38'
         self.shortDescription = "Resource Description Framework (RDF)"
         self.svnTargets['gitHEAD'] = 'git://github.com/dajobe/raptor.git'
-        self.defaultTarget = '2.0.8'
+        self.defaultTarget = '2.0.15'
 
     def setDependencies( self ):
         self.dependencies['win32libs/yajl'] = 'default'
